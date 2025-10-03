@@ -1,8 +1,46 @@
+--Store Data in a Temporary Table
+SELECT * 
+INTO #BASETEMP
+FROM BASE;
+-------------------------------------------------------
+
 Insert query into table example:
 INSERT INTO [dbo].[yourtable]
 SELECT * FROM #BASETEMP; 
 
+-------------------------------------------------------
 
+Create table as in sql server from select:
+WITH BASE AS (
+SELECT *
+  FROM [dbo].[Table1]
+  where type = 'ABC'
+    )
 
-Create table from select query example:
-CREATE TABLE dbo.youtable as (SELECT * from oldtable);
+  SELECT * 
+  INTO dbo.Newtable
+  FROM BASE
+-------------------------------------------------------
+
+Execute Procedure
+EXEC [dbo].[ProcedureName];
+
+-------------------------------------------------------
+Create stored procedure
+CREATE OR ALTER PROCEDURE [dbo].[ProcedureName] AS
+
+BEGIN
+Create table as in sql server from select:
+WITH BASE AS (
+SELECT *
+  FROM [dbo].[Table1]
+  where type = 'ABC'
+    )
+
+  SELECT * 
+  INTO dbo.Newtable
+  FROM BASE
+END;
+
+-------------------------------------------------------
+
