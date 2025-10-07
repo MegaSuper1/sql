@@ -1,0 +1,56 @@
+
+-- Create a calendar/date dimension table
+CREATE TABLE dbo.DimCalendar
+(
+    DateKey        INT         NOT NULL PRIMARY KEY,  -- YYYYMMDD
+    FullDate       DATE        NOT NULL,              -- Actual date
+    DayNumber      TINYINT     NOT NULL,              -- 1-31
+    DayName        VARCHAR(10) NOT NULL,              -- Monday, Tuesday...
+    DayOfWeek      TINYINT     NOT NULL,              -- 1 = Monday, 7 = Sunday
+    WeekOfYear     TINYINT     NOT NULL,              -- 1-52
+    MonthNumber    TINYINT     NOT NULL,              -- 1-12
+    MonthName      VARCHAR(10) NOT NULL,              -- January...
+    QuarterNumber  TINYINT     NOT NULL,              -- 1-4
+    YearNumber     INT         NOT NULL,              -- 2025, etc.
+    IsWeekend      BIT         NOT NULL
+);
+GO
+
+------------------------------------------------------------------------------------------------------------
+
+DECLARE @startdate as DATE;
+DECLARE @enddate as DATE;
+--Set start date as first of month 12 months ago
+SET @startdate = DATEFROMPARTS(YEAR(DATEADD(YY, -5, GETDATE())), 1 , 1);
+--Set end date as last of month 1 months ago
+SET @enddate = DATEFROMPARTS(YEAR(DATEADD(YY, 1, GETDATE())), 12 , 31);
+
+-- Populate with a date range (e.g., 2000-01-01 through 2030-12-31)
+;WITH DateRange AS
+(
+    SELECT CAST('2023-01-01' AS DATE) AS TheDate
+    UNION ALL
+    SELECT DATEADD(DAY, 1, TheDate)
+    FROM DateRange
+    WHERE TheDate < '2026-12-31'
+)
+INSERT INTO dbo.DimCalendar
+(
+    DateKey, FullDate, DayNumber, DayName, DayOfWeek, 
+    WeekOfYear, MonthNumber, MonthName, QuarterNumber, YearNumber, IsWeekend
+)
+SELECT
+    CONVERT(INT, FORMAT(TheDate, 'yyyyMMdd')) AS DateKey,
+    TheDate,
+    DAY(TheDate) AS DayNumber,
+    DATENAME(WEEKDAY, TheDate) AS DayName,
+    DATEPART(WEEKDAY, TheDate) AS DayOfWeek,
+    DATEPART(WEEK, TheDate) AS WeekOfYear,
+    MONTH(TheDate) AS MonthNumber,
+    DATENAME(MONTH, TheDate) AS MonthName,
+    DATEPART(QUARTER, TheDate) AS QuarterNumber,
+    YEAR(TheDate) AS YearNumber,
+    CASE WHEN DATENAME(WEEKDAY, TheDate) IN ('Saturday','Sunday') THEN 1 ELSE 0 END AS IsWeekend
+FROM DateRange
+OPTION (MAXRECURSION 32767);
+GO
