@@ -11,8 +11,9 @@ CREATE TABLE dbo.DimCalendar
     MonthNumber    TINYINT     NOT NULL,              -- 1-12
     MonthName      VARCHAR(10) NOT NULL,              -- January...
     MonthStart     DATE        NOT NULL,              -- First date of the month
-    MonthEnd       DATE         NOT NULL,             -- Last date of the month
+    MonthEnd       DATE        NOT NULL,             -- Last date of the month
     QuarterNumber  TINYINT     NOT NULL,              -- 1-4
+    Quarter        VARCHAR(2)  NOT NULL,              -- Q1-Q4
     YearNumber     INT         NOT NULL,              -- 2025, etc.
     IsWeekend      BIT         NOT NULL
 );
@@ -39,7 +40,7 @@ SET @enddate = DATEFROMPARTS(YEAR(DATEADD(YY, 1, GETDATE())), 12 , 31);
 INSERT INTO dbo.DimCalendar
 (
     DateKey, FullDate, DayNumber, DayName, DayOfWeek, 
-    WeekOfYear, MonthNumber, MonthName, MonthStart, MonthEnd, QuarterNumber, YearNumber, IsWeekend
+    WeekOfYear, MonthNumber, MonthName, MonthStart, MonthEnd, QuarterNumber, Quarter, YearNumber, IsWeekend
 )
 SELECT
     CONVERT(INT, FORMAT(TheDate, 'yyyyMMdd')) AS DateKey,
@@ -53,6 +54,7 @@ SELECT
     DATEFROMPARTS(YEAR(TheDate),MONTH(TheDate),1) AS MonthStart;
     EOM(TheDate) AS MonthEnd;
     DATEPART(QUARTER, TheDate) AS QuarterNumber,
+    CONCAT('Q',DATEPART(QUARTER, TheDate)) AS Quarter,
     YEAR(TheDate) AS YearNumber,
     CASE WHEN DATENAME(WEEKDAY, TheDate) IN ('Saturday','Sunday') THEN 1 ELSE 0 END AS IsWeekend
 FROM DateRange
