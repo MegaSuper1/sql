@@ -4,6 +4,7 @@ CREATE TABLE dbo.DimCalendar
 (
     DateKey        INT         NOT NULL PRIMARY KEY,  -- YYYYMMDD
     FullDate       DATE        NOT NULL,              -- Actual date
+    DateTxt        VARCHAR(9)  NOT NULL,              --YYYY-MM-DD
     DayNumber      TINYINT     NOT NULL,              -- 1-31
     DayName        VARCHAR(10) NOT NULL,              -- Monday, Tuesday...
     DayOfWeek      TINYINT     NOT NULL,              -- 1 = Monday, 7 = Sunday
@@ -39,12 +40,13 @@ SET @enddate = DATEFROMPARTS(YEAR(DATEADD(YY, 1, GETDATE())), 12 , 31);
 )
 INSERT INTO dbo.DimCalendar
 (
-    DateKey, FullDate, DayNumber, DayName, DayOfWeek, 
+    DateKey, FullDate, DateTxt, DayNumber, DayName, DayOfWeek, 
     WeekOfYear, MonthNumber, MonthName, MonthStart, MonthEnd, QuarterNumber, Quarter, YearNumber, IsWeekend
 )
 SELECT
     CONVERT(INT, FORMAT(TheDate, 'yyyyMMdd')) AS DateKey,
     TheDate,
+    CONVERT(STR, FORMAT(TheDate, 'yyyy-MM-dd') AS DateTxt,
     DAY(TheDate) AS DayNumber,
     DATENAME(WEEKDAY, TheDate) AS DayName,
     DATEPART(WEEKDAY, TheDate) AS DayOfWeek,
