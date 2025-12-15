@@ -1,0 +1,72 @@
+DROP TABLE IF EXISTS dbo.DimDate
+GO
+CREATE TABLE dbo.DimDate
+(
+    DateKey varchar(10),
+    [Actual Date] date,
+    [Year] int,
+    [QuarterNum] int,
+    [Quarter] varchar(7),
+    [MonthNum] int,
+    [Month] varchar(15),
+    [WeekDayNum] int,
+    [WeekDay] varchar(15)
+)
+GO
+
+DECLARE
+    @StartDate DateTime = DateFromParts(Year(Getdate())-10,1,1),
+    @EndDate DateTime = DateFromParts(Year(GetDate())+2,1,1),
+    @StartInt int,
+    @EndInt int,
+    @CurrentDate DATE = CAST((GETDATE() AT TIME ZONE 'UTC' AT TIME ZONE 'Central Standard Time') AS DATE)
+
+
+SELECT
+    @StartInt = CAST(@StartDate AS INT),
+    @EndInt = CAST(@EndDate AS INT) ;
+
+WITH Days
+AS
+(
+    SELECT 
+        CAST(CAST(value as datetime) AS DATE) [Actual Date]
+    FROM GENERATE_SERIES(@StartInt, @EndInt, 1)
+)
+--INSERT INTO DimDate
+SELECT 
+    [Actual Date] AS  [DateKey],
+    [Actual Date] AS [Cal Date], 
+    FORMAT([Actual Date],'yyyy-MM-dd') AS [Cal DateTxt], 
+    YEAR([Actual Date]) [Year],
+    CONCAT(YEAR([Actual Date]),'-','Q', CAST(DATEPART(QUARTER, [Actual Date]) AS VARCHAR)) [YearQtr],
+    DATEPART(QUARTER, [Actual Date]) [QuarterNum],
+    'Q'+ CAST(DATEPART(QUARTER, [Actual Date]) AS VARCHAR) [Quarter],
+    MONTH([Actual Date]) [MonthNbr],
+    FORMAT([Actual Date],'MM') [MonthMM],
+    FORMAT([Actual Date],'yyyy-MM') [YearMonth],
+    DATENAME(MONTH, [Actual Date]) [Month],
+    DATEPART(dw, [Actual Date]) [WeekdayNum],
+    DATENAME(dw, [Actual Date]) [Weekday],
+    CASE WHEN [Actual Date]=@CurrentDate
+            THEN 1 
+            ELSE 0 
+         END [CurrentDate],
+         DATEPART(dayofyear,[Actual Date]) [DayofYear],
+         DATEPART(WEEK, @CurrentDate) [WeekOfYear],
+         DATEPART(ISO_WEEK, @CurrentDate) [ISOWeekOfYear],
+
+    DATEDIFF(DD,[Actual Date], @CurrentDate) [OffsetDays],
+    DATEDIFF(MM,[Actual Date], @CurrentDate) [OffsetMonths],
+    DATEDIFF(YY,[Actual Date], @CurrentDate) [OffsetYears],
+    CASE WHEN MONTH([Actual Date])<MONTH(@CurrentDate)
+            THEN 1
+            ELSE 0
+         END [MTD Full Months],
+
+CASE WHEN [Actual Date]<DATEADD(YEAR,YEAR([Actual Date])-YEAR(@CurrentDate),@CurrentDate) AND [Actual Date]<@CurrentDate 
+            THEN 1
+            ELSE 0
+         END [YTD All Years]
+
+FROM Days
